@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorías UV</title>
+  <link rel="icon" type="image/png" href="media/uvlogo.webp">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+  <!-- ENCABEZADO -->
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="#">
+        <img class="brand__logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXe3ANbkzRoXOvtEhN-qaKVQjsimzu7Boi0T5wNMPLgFc1fCufbPBcOx4c7YgrfUSCvE6Fyk0sH1ngb4us52qOjjK-rpt-pdOfYKzQPN2Va20fZYcrrRXrE4c8enz5sxYCg6Obv9Bz0l9azA8MwPWO1AmZ5IXwL09YbMmq7nR_dZX-V1xFoSnyESqEdgmMeKLDeKzGLelsn_A_VakPE3QxnS5-LeWBmARKUSXUzoVX-H81upAeydGpH4sG4RCEvVTCdQ" alt="Logotipo Universidad Veracruzana">
+        <div class="brand__text">
+          <span class="brand__title">Tutorías <span>UV</span></span>
+          <span class="brand__sub">Universidad Veracruzana</span>
+        </div>
+      </a>
+<!-- opciones -->
+      <nav class="nav">
+        <a class="is-active" href="#inicio">Inicio</a>
+        <a href="#">Opción 1</a>
+        <a href="_#">Opción 2</a>
+      </nav>
+
+      <a class="btn btn--green btn--sm" href="#login-portales">
+        Ingresar al Portal <span class="icon icon--sm" aria-hidden="true">arrow_forward</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container page">
+
+      <!-- HERO -->
+      <section class="hero" id="inicio">
+        <div class="hero__visual"><div></div></div>
+
+        <div class="hero__content">
+          <h1 class="hero__title">Bienvenido al Portal de <span>Tutorías UV</span></h1>
+          <p class="hero__lead">
+            Consulta a tu tutor asignado, acuerda horarios, accede a materiales y da seguimiento a tus sesiones desde una misma plataforma académica institucional.
+          </p>
+
+          <div class="hero__actions">
+            <a class="btn btn--green btn--lg" href="#login-portales">
+              Iniciar Sesión Institucional <span class="icon icon--md" aria-hidden="true">arrow_forward</span>
+            </a>
+            <a class="btn btn--outline" href="#como-funciona">Conoce cómo funciona</a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Accesos -->
+      <section class="section" id="login-portales">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Selecciona tu Perfil de Ingreso</h2>
+          </div>
+        </div>
+
+        <div class="access-grid">
+          <!-- Estudiantes -->
+          <article class="access-card access-card--student">
+            <div>
+              <div class="access-card__top">
+              </div>
+              <h3 class="card-title">Portal del Tutorado</h3>
+              <p class="card-text">
+                Consulta la información de tu tutor asignado, solicita una tutoría virtual, plantea tus dudas y revisa los materiales compartidos para dar seguimiento a tus sesiones.
+              </p>
+            </div>
+            <div class="access-card__foot">
+              <a class="btn btn--green btn--block" href="login.php?tipo=estudiante">
+                Acceso para estudiantes <span class="icon icon--md" aria-hidden="true">arrow_forward</span>
+              </a>
+            </div>
+          </article>
+
+          <!-- Docentes -->
+          <article class="access-card access-card--teacher">
+            <div>
+              <div class="access-card__top">
+              </div>
+              <h3 class="card-title">Portal del Docente Tutor</h3>
+              <p class="card-text">
+               Organiza tus horarios, atiende las dudas de tus tutorados, comparte recursos académicos y registra los temas y acuerdos de cada tutoría.
+              </p>
+            </div>
+            <div class="access-card__foot">
+              <a class="btn btn--dark btn--block" href="login.php?tipo=tutor">
+                Acceso para Docentes <span class="icon icon--md" aria-hidden="true">arrow_forward</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- HERRAMIENTAS Y SERVICIOS -->
+      <section class="section section--loose" id="servicios">
+        <div class="section-head section-head--md">
+          <div>
+            <h2 class="section-title">Un espacio para organizar y dar seguimiento a tus tutorías</h2>
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card feature-card--blue">
+            <div>
+              <div class="feature-card__top">
+                <div class="feature-card__icon"><span class="icon icon--lg" aria-hidden="true">calendar_month</span></div>
+              </div>
+              <h3 class="card-title">Organización de tutorías</h3>
+              <p class="card-text">Consulta horarios disponibles y coordina sesiones virtuales con tu tutor o tutorado.</p>
+            </div>
+          </div>
+
+          <div class="feature-card feature-card--green">
+            <div>
+              <div class="feature-card__top">
+                <div class="feature-card__icon"><span class="icon icon--lg" aria-hidden="true">folder_open</span></div>
+              </div>
+              <h3 class="card-title">Dudas y materiales</h3>
+              <p class="card-text">Comparte preguntas, respuestas, documentos y enlaces útiles para preparar las sesiones.</p>
+            </div>
+          </div>
+
+          <div class="feature-card feature-card--yellow">
+            <div>
+              <div class="feature-card__top">
+                <div class="feature-card__icon"><span class="icon icon--lg" aria-hidden="true">fact_check</span></div>
+              </div>
+              <h3 class="card-title">Seguimiento y retroalimentación</h3>
+              <p class="card-text">Consulta los temas tratados, revisa los acuerdos y comparte tu opinión sobre la tutoría.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CÓMO FUNCIONA -->
+      <section class="guide" id="como-funciona">
+        <div class="guide__intro">
+          <span class="kicker">Guía Rápida</span>
+          <h2 class="section-title section-title--plain">¿Cómo funciona el acompañamiento tutorial?</h2>
+          <p class="guide__text">El Sistema Institucional de Tutorías de la Universidad Veracruzana conecta periódicamente a los estudiantes con su docente tutor asignado para dar seguimiento a la carga académica, avance reticular y resolución de dudas formativas.</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <span class="step__title">01. Consuta</span>
+            <p class="step__text">Identifica a tu tutor y revisa la información disponible.</p>
+          </div>
+          <div class="step">
+            <span class="step__title">02. Coordina</span>
+            <p class="step__text">Publica tus dudas y acuerda una fecha para la tutoría virtual.</p>
+          </div>
+          <div class="step">
+            <span class="step__title">03. Da seguimiento</span>
+            <p class="step__text">Consulta los materiales, los temas tratados y los acuerdos de la sesión.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col footer-col--brand">
+          <div class="footer-brand">
+            <div class="footer-logo">UV</div>
+            <div>
+              <span class="footer-brand__name">Universidad Veracruzana</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-title">Soporte Institucional</h4>
+          <p class="footer-text">Para incidencias técnicas o acceso con cuenta institucional:</p>
+        </div>
+
+        <div class="footer-col" id="preguntas-frecuentes">
+          <h4 class="footer-title">Avisos y Normativa</h4>
+          <ul class="footer-links">
+            <li><a href="#">Aviso de Privacidad Integral UV</a></li>
+            <li><a href="#">Reglamento del Sistema Institucional de Tutorías</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-title">Regiones UV</h4>
+          <div class="chips">
+            <span class="chip">Xalapa</span>
+            <span class="chip">Veracruz - Boca del Río</span>
+            <span class="chip">Orizaba - Córdoba</span>
+            <span class="chip">Poza Rica - Tuxpan</span>
+            <span class="chip">Coatzacoalcos - Minatitlán</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2025 Universidad Veracruzana. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
