@@ -38,52 +38,6 @@ foreach ($sesiones as &$sesion) {
 }
 unset($sesion);
 
-$seguimiento = null;
-$tiene_tabla_asistencias = false;
-$columnas_asistencia = [];
-$tabla = $conexion->query("SHOW TABLES LIKE 'asistencias'");
-if ($tabla && $tabla->num_rows > 0) {
-    $tiene_tabla_asistencias = true;
-    $cols = $conexion->query("SHOW COLUMNS FROM asistencias");
-    if ($cols) {
-        while ($col = $cols->fetch_assoc()) {
-            $columnas_asistencia[] = $col['Field'];
-        }
-    }
-}
-
-if (
-    $tiene_tabla_asistencias
-    && in_array('estudiante_id', $columnas_asistencia, true)
-    && in_array('asistio', $columnas_asistencia, true)
-) {
-    // Compatibilidad: si existe horario_id, filtramos por tutor para evitar mezclar otras tutorías.
-    if ($tutor && in_array('horario_id', $columnas_asistencia, true)) {
-        $consulta = $conexion->prepare(
-            "SELECT COUNT(*) AS total_registros,
-                    COALESCE(SUM(CASE WHEN a.asistio = 1 THEN 1 ELSE 0 END), 0) AS asistidas,
-                    COALESCE(SUM(CASE WHEN a.asistio = 0 THEN 1 ELSE 0 END), 0) AS faltas
-             FROM asistencias a
-             JOIN horarios h ON h.id = a.horario_id
-             WHERE a.estudiante_id = ? AND h.tutor_id = ?"
-        );
-        $consulta->bind_param("ii", $estudiante_id, $tutor['id']);
-    } else {
-        $consulta = $conexion->prepare(
-            "SELECT COUNT(*) AS total_registros,
-                    COALESCE(SUM(CASE WHEN asistio = 1 THEN 1 ELSE 0 END), 0) AS asistidas,
-                    COALESCE(SUM(CASE WHEN asistio = 0 THEN 1 ELSE 0 END), 0) AS faltas
-             FROM asistencias
-             WHERE estudiante_id = ?"
-        );
-        $consulta->bind_param("i", $estudiante_id);
-    }
-
-    $consulta->execute();
-    $seguimiento = $consulta->get_result()->fetch_assoc();
-    $consulta->close();
-}
-
 function estado_legible($estado) {
     if ($estado === 'cancelada') {
         return 'Cancelada';
@@ -166,24 +120,7 @@ encabezado_privado("Panel del estudiante");
             <h2 class="section-title">Seguimiento de asistencia</h2>
           </div>
         </div>
-
-        <?php if ($seguimiento): ?>
-          <div class="panel-grid panel-grid--two">
-            <div class="info-card">
-              <span class="info-card__label">Sesiones registradas</span>
-              <span class="info-card__value"><?= (int)$seguimiento['total_registros'] ?></span>
-            </div>
-            <div class="info-card">
-              <span class="info-card__label">Asistencias</span>
-              <span class="info-card__value"><?= (int)$seguimiento['asistidas'] ?></span>
-              <span class="info-card__mail">Faltas: <?= (int)$seguimiento['faltas'] ?></span>
-            </div>
-          </div>
-        <?php elseif ($tiene_tabla_asistencias): ?>
-          <p class="card-text">Todavía no hay asistencias registradas para tus sesiones.</p>
-        <?php else: ?>
-          <p class="card-text">El seguimiento de asistencia aún no está habilitado en la base de datos. Ejecuta la migración <code>migrations/20261026_create_asistencias.sql</code> para activarlo.</p>
-        <?php endif; ?>
+        <p class="card-text">Esta sección queda preparada para mostrar asistencias cuando se confirme la estructura oficial para registro en la base de datos actual.</p>
       </section>
 
       <section class="section">
