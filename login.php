@@ -50,15 +50,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$fila || $fila['tipo'] !== $tipo) {
             $error = "No existe una cuenta de " . ($tipo === 'tutor' ? 'tutor' : 'estudiante') . " con ese correo.";
-                } elseif (!hash_equals($fila['contrasena'], $clave)) {
-            $error = "La contraseña es incorrecta.";
         } else {
-            session_regenerate_id(true);
-            $_SESSION['usuario_id']     = (int)$fila['id'];
-            $_SESSION['usuario_nombre'] = $fila['nombre'];
-            $_SESSION['usuario_tipo']   = $fila['tipo'];
-            header('Location: ' . ruta_panel($fila['tipo']));
-            exit;
+            $contrasena_guardada = (string)$fila['contrasena'];
+            $algo_hash = password_get_info($contrasena_guardada)['algo'];
+            $usa_hash = $algo_hash !== null && $algo_hash !== 0;
+            $contrasena_ok = $usa_hash
+                ? password_verify($clave, $contrasena_guardada)
+                : hash_equals($contrasena_guardada, $clave);
+
+            if (!$contrasena_ok) {
+                $error = "La contraseña es incorrecta.";
+            } else {
+                session_regenerate_id(true);
+                $_SESSION['usuario_id']     = (int)$fila['id'];
+                $_SESSION['usuario_nombre'] = $fila['nombre'];
+                $_SESSION['usuario_tipo']   = $fila['tipo'];
+                header('Location: ' . ruta_panel($fila['tipo']));
+                exit;
+            }
         }
     }
 }
