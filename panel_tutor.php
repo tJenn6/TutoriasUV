@@ -19,9 +19,9 @@ $consulta->execute();
 $tutorados = $consulta->get_result()->fetch_all(MYSQLI_ASSOC);
 $consulta->close();
 
-// Sesiones del tutor (próximas, pasadas y canceladas).
+// Sesiones del tutor (próximas y pasadas).
 $consulta = $conexion->prepare(
-    "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual, disponible
+    "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual
      FROM horarios
      WHERE tutor_id = ?
      ORDER BY fecha, hora_inicio"
@@ -36,13 +36,11 @@ unset($_SESSION['aviso']);
 
 $proximas = [];
 $pasadas = [];
-$canceladas = [];
+
 foreach ($horarios as $hr) {
     $estado = estado_horario($hr, $ahora);
     $hr['estado'] = $estado;
-    if ($estado === 'cancelada') {
-        $canceladas[] = $hr;
-    } elseif ($estado === 'pasada') {
+    if ($estado === 'pasada') {
         $pasadas[] = $hr;
     } else {
         $proximas[] = $hr;
@@ -50,9 +48,7 @@ foreach ($horarios as $hr) {
 }
 
 function etiqueta_estado($estado) {
-    if ($estado === 'cancelada') {
-        return 'Cancelada';
-    }
+
     if ($estado === 'pasada') {
         return 'Pasada';
     }
@@ -120,15 +116,6 @@ encabezado_privado("Panel del Tutor");
                           <button class="btn btn--dark btn--sm" type="submit">Guardar enlace</button>
                         </form>
 
-                        <form method="post" action="tutor_horarios.php">
-                          <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
-                          <input type="hidden" name="return_to" value="panel_tutor.php">
-                          <input type="hidden" name="accion" value="cancelar">
-                          <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
-                          <button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('¿Cancelar esta tutoría?')">
-                            Cancelar tutoría
-                          </button>
-                        </form>
                       </div>
                     </article>
                   <?php endforeach; ?>
@@ -153,40 +140,6 @@ encabezado_privado("Panel del Tutor");
                             <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
                           <?php endif; ?>
                         </p>
-                      </div>
-                    </article>
-                  <?php endforeach; ?>
-                </div>
-              <?php endif; ?>
-            </div>
-
-            <div>
-              <h3 class="section-subtitle">Canceladas</h3>
-              <?php if (count($canceladas) === 0): ?>
-                <p class="card-text">No hay sesiones canceladas.</p>
-              <?php else: ?>
-                <div class="session-list">
-                  <?php foreach ($canceladas as $hr): ?>
-                    <article class="session session--cancelled">
-                      <div class="session__info">
-                        <h4 class="card-title session__title">Tutoría <?= h(texto_tutoria($hr['fecha'], $hr['hora_inicio'], $hr['hora_fin'])) ?></h4>
-                        <p class="session__meta">
-                          <span class="session-badge session-badge--cancelada">Cancelada</span>
-                          <?= $hr['enlace_virtual'] ? 'Virtual · ' : 'Presencial' ?>
-                          <?php if ($hr['enlace_virtual']): ?>
-                            <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
-                          <?php endif; ?>
-                        </p>
-                      </div>
-
-                      <div class="session__actions">
-                        <form method="post" action="tutor_horarios.php">
-                          <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
-                          <input type="hidden" name="return_to" value="panel_tutor.php">
-                          <input type="hidden" name="accion" value="reactivar">
-                          <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
-                          <button class="btn btn--outline btn--sm" type="submit">Reactivar tutoría</button>
-                        </form>
                       </div>
                     </article>
                   <?php endforeach; ?>

@@ -1,5 +1,4 @@
 <?php
-// Inicia la sesión y define funciones de ayuda para todo el sitio.
 
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
@@ -48,6 +47,7 @@ function requerir_login($tipo) {
 // Parte de arriba de toda página privada (head, encabezado y apertura de <main>).
 function encabezado_privado($titulo) {
     $tipo_usuario = $_SESSION['usuario_tipo'] ?? 'estudiante';
+    $estilo_panel = $tipo_usuario === 'tutor' ? 'css/stylePT.css' : 'css/stylePE.css';
     ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -59,6 +59,7 @@ function encabezado_privado($titulo) {
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+  <link href="<?= h($estilo_panel) ?>" rel="stylesheet">
 </head>
 <body>
 
@@ -73,7 +74,6 @@ function encabezado_privado($titulo) {
       </a>
 
       <div class="user-bar">
-        <span class="user-bar__name"><?= h($_SESSION['usuario_nombre'] ?? '') ?></span>
         <form method="post" action="login.php">
           <input type="hidden" name="accion" value="logout">
           <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
@@ -88,7 +88,7 @@ function encabezado_privado($titulo) {
 <?php
 }
 
-// Parte de abajo de toda página privada (cierra <main> y pone el pie).
+// Parte inferior de toda página privada.
 function pie_privado() {
     ?>
     </div>
@@ -106,8 +106,7 @@ function pie_privado() {
 }
 
 
-
-// Texto de una tutoría, por ejemplo: "jueves 05 de oct · 2:00 pm a 3:00 pm".
+//fechas
 function texto_tutoria($fecha, $hora_inicio, $hora_fin) {
     $dias  = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -125,12 +124,8 @@ function zona_tutorias() {
     return $zona;
 }
 
-// Estado de una sesión con base en fecha/hora y disponibilidad.
+// Estado de una sesión con base en fecha y hora.
 function estado_horario($horario, $ahora = null) {
-    if (empty($horario['disponible'])) {
-        return 'cancelada';
-    }
-
     if (!$ahora instanceof DateTimeImmutable) {
         $ahora = new DateTimeImmutable('now', zona_tutorias());
     }
@@ -156,14 +151,4 @@ function estado_horario($horario, $ahora = null) {
         return 'proxima';
     }
     return 'en_curso';
-}
-
-// Un enlace es válido si está vacío o empieza con http:// o https:// (máximo 500 caracteres).
-function enlace_valido($enlace) {
-    if ($enlace === '') {
-        return true;
-    }
-    return strlen($enlace) <= 500
-        && filter_var($enlace, FILTER_VALIDATE_URL) !== false
-        && preg_match('#^https?://#i', $enlace) === 1;
 }

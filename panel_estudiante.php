@@ -22,7 +22,7 @@ $consulta->close();
 $sesiones = [];
 if ($tutor) {
     $consulta = $conexion->prepare(
-        "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual, disponible
+        "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual
          FROM horarios
          WHERE tutor_id = ?
          ORDER BY fecha, hora_inicio"
@@ -39,9 +39,6 @@ foreach ($sesiones as &$sesion) {
 unset($sesion);
 
 function estado_legible($estado) {
-    if ($estado === 'cancelada') {
-        return 'Cancelada';
-    }
     if ($estado === 'pasada') {
         return 'Pasada';
     }
@@ -58,7 +55,6 @@ encabezado_privado("Panel del estudiante");
         <div class="section-head">
           <div>
             <span class="kicker">Panel del tutorado</span>
-            <h1 class="section-title">Hola, <?= h($_SESSION['usuario_nombre']) ?></h1>
           </div>
         </div>
       </section>
@@ -97,7 +93,7 @@ encabezado_privado("Panel del estudiante");
         <?php else: ?>
           <div class="session-list">
             <?php foreach ($sesiones as $sesion): ?>
-              <article class="session<?= $sesion['estado'] === 'cancelada' ? ' session--cancelled' : '' ?>">
+              <article class="session">
                 <div class="session__info">
                   <h3 class="card-title session__title">Tutoría <?= h(texto_tutoria($sesion['fecha'], $sesion['hora_inicio'], $sesion['hora_fin'])) ?></h3>
                   <p class="session__meta">
@@ -120,7 +116,6 @@ encabezado_privado("Panel del estudiante");
             <h2 class="section-title">Seguimiento de asistencia</h2>
           </div>
         </div>
-        <p class="card-text">Esta sección queda preparada para mostrar asistencias cuando se confirme la estructura oficial para registro en la base de datos actual.</p>
       </section>
 
       <section class="section">

@@ -51,9 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($fin <= $inicio) {
             aviso('error', 'La hora de fin debe ser posterior a la hora de inicio.', $destino);
         }
-        if (!enlace_valido($enlace)) {
-            aviso('error', 'El enlace debe empezar con http:// o https://', $destino);
-        }
+
 
         $enlace_bd = ($enlace === '') ? null : $enlace;
         $consulta = $conexion->prepare(
@@ -66,27 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         aviso('ok', 'Tutoría publicada.', $destino);
     }
 
-    // Cancelar o reactivar una tutoría
-    if ($accion === 'cancelar' || $accion === 'reactivar') {
-        $id = (int)($_POST['id'] ?? 0);
-        $disponible = ($accion === 'reactivar') ? 1 : 0;
-        $consulta = $conexion->prepare(
-            "UPDATE horarios SET disponible = ? WHERE id = ? AND tutor_id = ?"
-        );
-        $consulta->bind_param("iii", $disponible, $id, $tutor_id);
-        $consulta->execute();
-        $consulta->close();
-        aviso('ok', $disponible ? 'Tutoría reactivada.' : 'Tutoría cancelada.', $destino);
-    }
-
     // Guardar o quitar el enlace de la sesión virtual
     if ($accion === 'guardar_enlace') {
         $id     = (int)($_POST['id'] ?? 0);
         $enlace = trim($_POST['enlace_virtual'] ?? '');
-
-        if (!enlace_valido($enlace)) {
-            aviso('error', 'El enlace debe empezar con http:// o https://', $destino);
-        }
 
         $enlace_bd = ($enlace === '') ? null : $enlace;
         $consulta = $conexion->prepare(
@@ -107,7 +88,7 @@ unset($_SESSION['aviso']);
 
 // Tutorías de hoy en adelante.
 $consulta = $conexion->prepare(
-    "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual, disponible
+    "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual
      FROM horarios
      WHERE tutor_id = ? AND fecha >= ?
      ORDER BY fecha, hora_inicio"
@@ -183,13 +164,11 @@ encabezado_privado("Mis horarios");
         <?php else: ?>
           <div class="session-list">
             <?php foreach ($horarios as $hr): ?>
-              <article class="session<?= $hr['disponible'] ? '' : ' session--cancelled' ?>">
+              <article class="session">
                 <div class="session__info">
                   <h3 class="card-title session__title">Tutoría <?= h(texto_tutoria($hr['fecha'], $hr['hora_inicio'], $hr['hora_fin'])) ?></h3>
                   <p class="session__meta">
-                    <?php if (!$hr['disponible']): ?>
-                      Cancelada
-                    <?php elseif ($hr['enlace_virtual']): ?>
+                    <?php if ($hr['enlace_virtual']): ?>
                       Virtual · <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
                     <?php else: ?>
                       Presencial
@@ -206,16 +185,6 @@ encabezado_privado("Mis horarios");
                     <input class="form-input" type="url" name="enlace_virtual" maxlength="500"
                            value="<?= h($hr['enlace_virtual']) ?>" placeholder="Enlace virtual (opcional)">
                     <button class="btn btn--dark btn--sm" type="submit">Guardar enlace</button>
-                  </form>
-
-                  <form method="post" action="tutor_horarios.php">
-                    <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
-                    <input type="hidden" name="return_to" value="tutor_horarios.php">
-                    <input type="hidden" name="accion" value="<?= $hr['disponible'] ? 'cancelar' : 'reactivar' ?>">
-                    <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
-                    <button class="btn btn--outline btn--sm" type="submit"<?= $hr['disponible'] ? ' onclick="return confirm(\'¿Cancelar esta tutoría?\')"' : '' ?>>
-                      <?= $hr['disponible'] ? 'Cancelar tutoría' : 'Reactivar tutoría' ?>
-                    </button>
                   </form>
                 </div>
               </article>
