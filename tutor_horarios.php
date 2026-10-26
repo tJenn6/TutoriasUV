@@ -4,12 +4,19 @@ require_once "config/sesion.php";
 requerir_login('tutor');
 
 $tutor_id = (int)$_SESSION['usuario_id'];
-$hoy = (new DateTime('today', new DateTimeZone('America/Mexico_City')))->format('Y-m-d');
+$hoy = (new DateTime('today', zona_tutorias()))->format('Y-m-d');
+
+// Solo permitimos destinos internos conocidos para evitar redirecciones abiertas.
+function destino_post() {
+    $destino = $_POST['return_to'] ?? 'tutor_horarios.php';
+    $permitidos = ['tutor_horarios.php', 'panel_tutor.php'];
+    return in_array($destino, $permitidos, true) ? $destino : 'tutor_horarios.php';
+}
 
 // Guarda un aviso en la sesión, regresa a esta página y termina.
-function aviso($tipo, $texto) {
+function aviso($tipo, $texto, $destino = 'tutor_horarios.php') {
     $_SESSION['aviso'] = ['tipo' => $tipo, 'texto' => $texto];
-    header('Location: tutor_horarios.php');
+    header('Location: ' . $destino);
     exit;
 }
 
@@ -20,8 +27,10 @@ function formato_ok($valor, $formato) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $destino = destino_post();
+
     if (!token_valido($_POST['token'] ?? '')) {
-        aviso('error', 'El formulario expiró. Intenta de nuevo.');
+        aviso('error', 'El formulario expiró. Intenta de nuevo.', $destino);
     }
 
     $accion = $_POST['accion'] ?? '';
@@ -34,16 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $enlace = trim($_POST['enlace_virtual'] ?? '');
 
         if (!formato_ok($fecha, 'Y-m-d') || !formato_ok($inicio, 'H:i') || !formato_ok($fin, 'H:i')) {
-            aviso('error', 'Revisa la fecha y las horas.');
+            aviso('error', 'Revisa la fecha y las horas.', $destino);
         }
         if ($fecha < $hoy) {
-            aviso('error', 'La fecha no puede ser anterior a hoy.');
+            aviso('error', 'La fecha no puede ser anterior a hoy.', $destino);
         }
         if ($fin <= $inicio) {
-            aviso('error', 'La hora de fin debe ser posterior a la hora de inicio.');
+            aviso('error', 'La hora de fin debe ser posterior a la hora de inicio.', $destino);
         }
         if (!enlace_valido($enlace)) {
-            aviso('error', 'El enlace debe empezar con http:// o https://');
+            aviso('error', 'El enlace debe empezar con http:// o https://', $destino);
         }
 
         $enlace_bd = ($enlace === '') ? null : $enlace;
@@ -54,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $consulta->bind_param("issss", $tutor_id, $fecha, $inicio, $fin, $enlace_bd);
         $consulta->execute();
         $consulta->close();
-        aviso('ok', 'Tutoría publicada.');
+        aviso('ok', 'Tutoría publicada.', $destino);
     }
 
     // Cancelar o reactivar una tutoría
@@ -67,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $consulta->bind_param("iii", $disponible, $id, $tutor_id);
         $consulta->execute();
         $consulta->close();
-        aviso('ok', $disponible ? 'Tutoría reactivada.' : 'Tutoría cancelada.');
+        aviso('ok', $disponible ? 'Tutoría reactivada.' : 'Tutoría cancelada.', $destino);
     }
 
     // Guardar o quitar el enlace de la sesión virtual
@@ -76,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $enlace = trim($_POST['enlace_virtual'] ?? '');
 
         if (!enlace_valido($enlace)) {
-            aviso('error', 'El enlace debe empezar con http:// o https://');
+            aviso('error', 'El enlace debe empezar con http:// o https://', $destino);
         }
 
         $enlace_bd = ($enlace === '') ? null : $enlace;
@@ -86,10 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $consulta->bind_param("sii", $enlace_bd, $id, $tutor_id);
         $consulta->execute();
         $consulta->close();
-        aviso('ok', $enlace === '' ? 'Enlace quitado.' : 'Enlace guardado.');
+        aviso('ok', $enlace === '' ? 'Enlace quitado.' : 'Enlace guardado.', $destino);
     }
 
-    aviso('error', 'Acción no válida.');
+    aviso('error', 'Acción no válida.', $destino);
 }
 
 // Aviso guardado antes de redirigir (se muestra una sola vez).
@@ -126,13 +135,14 @@ encabezado_privado("Mis horarios");
       </section>
 
       <section class="section">
-        <div class="access-card access-card--teacher">
+        <div class="access-card access-card--teacher" id="nueva-sesion">
           <div>
             <h2 class="card-title">Publicar una tutoría</h2>
             <p class="card-text">Tus tutorados la verán con su fecha y hora. El enlace virtual es opcional: ponlo solo si acuerdan una sesión virtual.</p>
 
             <form class="login-form" method="post" action="tutor_horarios.php">
               <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+              <input type="hidden" name="return_to" value="tutor_horarios.php">
               <input type="hidden" name="accion" value="crear">
 
               <div class="form-row">
@@ -190,6 +200,7 @@ encabezado_privado("Mis horarios");
                 <div class="session__actions">
                   <form class="session__form" method="post" action="tutor_horarios.php">
                     <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+                    <input type="hidden" name="return_to" value="tutor_horarios.php">
                     <input type="hidden" name="accion" value="guardar_enlace">
                     <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
                     <input class="form-input" type="url" name="enlace_virtual" maxlength="500"
@@ -199,6 +210,7 @@ encabezado_privado("Mis horarios");
 
                   <form method="post" action="tutor_horarios.php">
                     <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+                    <input type="hidden" name="return_to" value="tutor_horarios.php">
                     <input type="hidden" name="accion" value="<?= $hr['disponible'] ? 'cancelar' : 'reactivar' ?>">
                     <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
                     <button class="btn btn--outline btn--sm" type="submit"<?= $hr['disponible'] ? ' onclick="return confirm(\'¿Cancelar esta tutoría?\')"' : '' ?>>

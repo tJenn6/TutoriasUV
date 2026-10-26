@@ -3,7 +3,8 @@ require_once "config/conexion.php";
 require_once "config/sesion.php";
 requerir_login('tutor');
 
-$id = $_SESSION['usuario_id'];
+$tutor_id = (int)$_SESSION['usuario_id'];
+$ahora = new DateTimeImmutable('now', zona_tutorias());
 
 // Estudiantes asignados a este tutor.
 $consulta = $conexion->prepare(
@@ -13,11 +14,53 @@ $consulta = $conexion->prepare(
      WHERE a.tutor_id = ?
      ORDER BY u.nombre"
 );
-$consulta->bind_param("i", $id);
+$consulta->bind_param("i", $tutor_id);
 $consulta->execute();
 $tutorados = $consulta->get_result()->fetch_all(MYSQLI_ASSOC);
 $consulta->close();
 
+// Sesiones del tutor (próximas, pasadas y canceladas).
+$consulta = $conexion->prepare(
+    "SELECT id, fecha, hora_inicio, hora_fin, enlace_virtual, disponible
+     FROM horarios
+     WHERE tutor_id = ?
+     ORDER BY fecha, hora_inicio"
+);
+$consulta->bind_param("i", $tutor_id);
+$consulta->execute();
+$horarios = $consulta->get_result()->fetch_all(MYSQLI_ASSOC);
+$consulta->close();
+
+$aviso = $_SESSION['aviso'] ?? null;
+unset($_SESSION['aviso']);
+
+$proximas = [];
+$pasadas = [];
+$canceladas = [];
+foreach ($horarios as $hr) {
+    $estado = estado_horario($hr, $ahora);
+    $hr['estado'] = $estado;
+    if ($estado === 'cancelada') {
+        $canceladas[] = $hr;
+    } elseif ($estado === 'pasada') {
+        $pasadas[] = $hr;
+    } else {
+        $proximas[] = $hr;
+    }
+}
+
+function etiqueta_estado($estado) {
+    if ($estado === 'cancelada') {
+        return 'Cancelada';
+    }
+    if ($estado === 'pasada') {
+        return 'Pasada';
+    }
+    if ($estado === 'en_curso') {
+        return 'En curso';
+    }
+    return 'Próxima';
+}
 
 encabezado_privado("Panel del Tutor");
 ?>
@@ -31,14 +74,127 @@ encabezado_privado("Panel del Tutor");
         </div>
       </section>
 
-            <section class="section">
-        <div class="panel-grid">
-          <a class="info-card" href="tutor_horarios.php">
-            <span class="info-card__label">Tutorías</span>
-            <span class="info-card__value">Mis horarios</span>
-            <span class="info-card__mail">Publica y administra tus tutorías</span>
-          </a>
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Sesiones</h2>
+          </div>
+          <a class="back-link panel-action-link" href="tutor_horarios.php#nueva-sesion">Nueva sesión</a>
         </div>
+
+        <?php if ($aviso): ?>
+          <div class="alert <?= $aviso['tipo'] === 'ok' ? 'alert--ok' : 'alert--error' ?>" role="alert"><?= h($aviso['texto']) ?></div>
+        <?php endif; ?>
+
+        <?php if (count($horarios) === 0): ?>
+          <p class="card-text">Aún no tienes sesiones publicadas. Usa <strong>Nueva sesión</strong> para publicar la primera.</p>
+        <?php else: ?>
+          <div class="section section--tight">
+            <div>
+              <h3 class="section-subtitle">Pendientes y próximas</h3>
+              <?php if (count($proximas) === 0): ?>
+                <p class="card-text">No hay sesiones pendientes por ahora.</p>
+              <?php else: ?>
+                <div class="session-list">
+                  <?php foreach ($proximas as $hr): ?>
+                    <article class="session">
+                      <div class="session__info">
+                        <h4 class="card-title session__title">Tutoría <?= h(texto_tutoria($hr['fecha'], $hr['hora_inicio'], $hr['hora_fin'])) ?></h4>
+                        <p class="session__meta">
+                          <span class="session-badge session-badge--<?= h($hr['estado']) ?>"><?= h(etiqueta_estado($hr['estado'])) ?></span>
+                          <?= $hr['enlace_virtual'] ? 'Virtual · ' : 'Presencial' ?>
+                          <?php if ($hr['enlace_virtual']): ?>
+                            <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
+                          <?php endif; ?>
+                        </p>
+                      </div>
+
+                      <div class="session__actions">
+                        <form class="session__form" method="post" action="tutor_horarios.php">
+                          <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+                          <input type="hidden" name="return_to" value="panel_tutor.php">
+                          <input type="hidden" name="accion" value="guardar_enlace">
+                          <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
+                          <input class="form-input" type="url" name="enlace_virtual" maxlength="500"
+                                 value="<?= h($hr['enlace_virtual']) ?>" placeholder="Enlace virtual (opcional)">
+                          <button class="btn btn--dark btn--sm" type="submit">Guardar enlace</button>
+                        </form>
+
+                        <form method="post" action="tutor_horarios.php">
+                          <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+                          <input type="hidden" name="return_to" value="panel_tutor.php">
+                          <input type="hidden" name="accion" value="cancelar">
+                          <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
+                          <button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('¿Cancelar esta tutoría?')">
+                            Cancelar tutoría
+                          </button>
+                        </form>
+                      </div>
+                    </article>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div>
+              <h3 class="section-subtitle">Sesiones pasadas</h3>
+              <?php if (count($pasadas) === 0): ?>
+                <p class="card-text">Aún no hay sesiones pasadas.</p>
+              <?php else: ?>
+                <div class="session-list">
+                  <?php foreach ($pasadas as $hr): ?>
+                    <article class="session">
+                      <div class="session__info">
+                        <h4 class="card-title session__title">Tutoría <?= h(texto_tutoria($hr['fecha'], $hr['hora_inicio'], $hr['hora_fin'])) ?></h4>
+                        <p class="session__meta">
+                          <span class="session-badge session-badge--pasada">Pasada</span>
+                          <?= $hr['enlace_virtual'] ? 'Virtual · ' : 'Presencial' ?>
+                          <?php if ($hr['enlace_virtual']): ?>
+                            <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
+                          <?php endif; ?>
+                        </p>
+                      </div>
+                    </article>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div>
+              <h3 class="section-subtitle">Canceladas</h3>
+              <?php if (count($canceladas) === 0): ?>
+                <p class="card-text">No hay sesiones canceladas.</p>
+              <?php else: ?>
+                <div class="session-list">
+                  <?php foreach ($canceladas as $hr): ?>
+                    <article class="session session--cancelled">
+                      <div class="session__info">
+                        <h4 class="card-title session__title">Tutoría <?= h(texto_tutoria($hr['fecha'], $hr['hora_inicio'], $hr['hora_fin'])) ?></h4>
+                        <p class="session__meta">
+                          <span class="session-badge session-badge--cancelada">Cancelada</span>
+                          <?= $hr['enlace_virtual'] ? 'Virtual · ' : 'Presencial' ?>
+                          <?php if ($hr['enlace_virtual']): ?>
+                            <a href="<?= h($hr['enlace_virtual']) ?>" target="_blank" rel="noopener">Abrir enlace</a>
+                          <?php endif; ?>
+                        </p>
+                      </div>
+
+                      <div class="session__actions">
+                        <form method="post" action="tutor_horarios.php">
+                          <input type="hidden" name="token" value="<?= h(token_csrf()) ?>">
+                          <input type="hidden" name="return_to" value="panel_tutor.php">
+                          <input type="hidden" name="accion" value="reactivar">
+                          <input type="hidden" name="id" value="<?= (int)$hr['id'] ?>">
+                          <button class="btn btn--outline btn--sm" type="submit">Reactivar tutoría</button>
+                        </form>
+                      </div>
+                    </article>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endif; ?>
       </section>
 
       <section class="section">

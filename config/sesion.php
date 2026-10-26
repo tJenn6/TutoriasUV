@@ -116,6 +116,48 @@ function texto_tutoria($fecha, $hora_inicio, $hora_fin) {
         . ' · ' . date('g:i a', strtotime($hora_inicio)) . ' a ' . date('g:i a', strtotime($hora_fin));
 }
 
+// Zona horaria única para clasificar sesiones de tutoría.
+function zona_tutorias() {
+    static $zona = null;
+    if ($zona === null) {
+        $zona = new DateTimeZone('America/Mexico_City');
+    }
+    return $zona;
+}
+
+// Estado de una sesión con base en fecha/hora y disponibilidad.
+function estado_horario($horario, $ahora = null) {
+    if (empty($horario['disponible'])) {
+        return 'cancelada';
+    }
+
+    if (!$ahora instanceof DateTimeImmutable) {
+        $ahora = new DateTimeImmutable('now', zona_tutorias());
+    }
+
+    $inicio = DateTimeImmutable::createFromFormat(
+        'Y-m-d H:i',
+        $horario['fecha'] . ' ' . $horario['hora_inicio'],
+        zona_tutorias()
+    );
+    $fin = DateTimeImmutable::createFromFormat(
+        'Y-m-d H:i',
+        $horario['fecha'] . ' ' . $horario['hora_fin'],
+        zona_tutorias()
+    );
+
+    if (!$inicio || !$fin) {
+        return 'proxima';
+    }
+    if ($fin < $ahora) {
+        return 'pasada';
+    }
+    if ($inicio > $ahora) {
+        return 'proxima';
+    }
+    return 'en_curso';
+}
+
 // Un enlace es válido si está vacío o empieza con http:// o https:// (máximo 500 caracteres).
 function enlace_valido($enlace) {
     if ($enlace === '') {

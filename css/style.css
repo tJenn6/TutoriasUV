@@ -459,6 +459,10 @@ h1, h2, h3, h4 {
     gap: 2rem;
 }
 
+.section--tight {
+    gap: 1.25rem;
+}
+
 .section-head {
     display: flex;
     flex-direction: column;
@@ -504,6 +508,13 @@ h1, h2, h3, h4 {
 .section-title--plain {
     margin-top: 0;
     letter-spacing: normal;
+}
+
+.section-subtitle {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 700;
 }
 
 /* ---------- Textos y etiquetas compartidos por las tarjetas ---------- */
@@ -946,6 +957,10 @@ button.btn {
     color: var(--blue-dark);
 }
 
+.panel-action-link {
+    margin-top: 0;
+}
+
 
 /* ---------- Paneles de usuario ---------- */
 .user-bar {
@@ -971,6 +986,16 @@ button.btn {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
+}
+
+.panel-grid--two {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+    .panel-grid--two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 640px) {
@@ -1054,6 +1079,10 @@ button.btn {
 }
 
 .session__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
     margin-top: .25rem;
     font-size: .875rem;
     color: var(--slate-500);
@@ -1069,6 +1098,40 @@ button.btn {
     flex-wrap: wrap;
     align-items: center;
     gap: .75rem;
+}
+
+.session-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .125rem .5rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.session-badge--proxima {
+    color: #1D4ED8;
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+}
+
+.session-badge--en_curso {
+    color: #047857;
+    background: #ECFDF5;
+    border-color: #A7F3D0;
+}
+
+.session-badge--pasada {
+    color: #4B5563;
+    background: #F3F4F6;
+    border-color: #D1D5DB;
+}
+
+.session-badge--cancelada {
+    color: #991B1B;
+    background: #FEF2F2;
+    border-color: #FECACA;
 }
 
 .session__form {
